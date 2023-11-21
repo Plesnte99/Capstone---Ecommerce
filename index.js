@@ -25,9 +25,9 @@ function calculateTotal(cart, req) {
   var total = 0;
   for (let i = 0; i < cart.length; i++) {
     if (cart[i].sale_price) {
-      total = total + cart[i].sale_price * cart[i].quantity;
+      total = total + (cart[i].sale_price * cart[i].quantity);
     } else {
-      total = total + cart[i].price * cart[i].quantity;
+      total = total + (cart[i].price * cart[i].quantity);
     }
   }
   req.session.total = total;
@@ -90,7 +90,7 @@ app.get("/cart", function (req, res) {
 
 app.post("/remove_product", function (req, res) {
   var id = req.body.id;
-  var cart = req.body.cart;
+  var cart = req.session.cart;
 
   for (let i = 0; i < cart.length; i++) {
     if (cart[i].id == id) {
@@ -113,7 +113,7 @@ app.post("/edit_product_quantity", function (req, res) {
 
   if (increase_btn) {
     for (let i = 0; i < cart.length; i++) {
-      if (cart[i].id == id) {
+      if (cart[i].id == id) { 
         if (cart[i].quantity > 0) {
           cart[i].quantity = parseInt(cart[i].quantity + 1);
         }
@@ -205,7 +205,7 @@ app.post("/place_order", function (req, res) {
 
           con.query(query, [values], (err, result) => {});
         }
-        res.redirect("pages/payment.ejs");
+        res.redirect("/payment");
       });
     }
   });
@@ -243,7 +243,7 @@ app.get("/verify_payment", function (req, res) {
           "UPDATE orders SET status='paid' WHERE id='" + order_id + "'",
           (err, result) => {}
         );
-        res.redirect("pages/thank_you.ejs");
+        res.redirect("/thankyou");
       });
     }
   });
@@ -252,6 +252,38 @@ app.get("/verify_payment", function (req, res) {
 app.get("/thankyou", function (req, res) {
   var order_id = req.session.order_id;
   res.render("pages/thank_you.ejs", { order_id: order_id });
+});
+
+app.get("/single_product", function (req, res) {
+  var id = req.query.id;
+
+  var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "",
+    database: "internship-project",
+  });
+
+  con.query("SELECT * FROM products WHERE id='"+id+"'", (err, result) => {
+    res.render("pages/single_product.ejs", { result: result });
+  });
+});
+
+app.get("/products", function (req, res) {
+  var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "",
+    database: "internship-project",
+  });
+
+  con.query("SELECT * FROM products", (err, result) => {
+    res.render("pages/products.ejs", { result: result });
+  });
+});
+
+app.get("/about", function (req, res) {
+  res.render("pages/about.ejs");
 });
 
 app.listen(port, () => {
